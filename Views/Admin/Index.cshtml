@@ -1,0 +1,155 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h2 class="fw-bold mb-4">Admin Dashboard</h2>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card stat-card border-0">
+            <div class="value">@ViewBag.TotalUsers</div>
+            <div class="label">Toplam Kullanıcı</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0">
+            <div class="value">@ViewBag.TotalTasks</div>
+            <div class="label">Toplam Görev</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0">
+            <div class="value text-success">@ViewBag.CompletedTasks</div>
+            <div class="label">Tamamlanan</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0">
+            <div class="value text-primary">%@ViewBag.CompletionRate</div>
+            <div class="label">Başarı Oranı</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100 p-4 border-0">
+            <h5 class="fw-bold mb-4">Görev Durum Dağılımı</h5>
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100 p-4 border-0">
+            <h5 class="fw-bold mb-4">Hızlı İşlemler</h5>
+            <div class="d-grid gap-3">
+                <a asp-action="Users" class="btn btn-primary btn-lg p-4">
+                    <i class="fa-solid fa-users me-2"></i>Kullanıcı Listesi & Dışa Aktar
+                </a>
+                <button class="btn btn-outline-primary btn-lg p-4" data-bs-toggle="modal" data-bs-target="#assignTaskModal">
+                    <i class="fa-solid fa-user-plus me-2"></i>Kullanıcıya Görev Ata
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Task Modal -->
+<div class="modal fade" id="assignTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Kullanıcıya Görev Ata</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Kullanıcı Seçin</label>
+                    <select id="assignUserId" class="form-select">
+                        <!-- Will be populated via JS or ViewBag -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Görev Başlığı</label>
+                    <input type="text" id="assignTitle" class="form-control" placeholder="Görev başlığı...">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Açıklama</label>
+                    <textarea id="assignDesc" class="form-control" rows="3" placeholder="Görev detayı..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">İptal</button>
+                <button type="button" id="btnAssign" class="btn btn-primary">Görevi Ata</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $.get('/Admin/GetChartData', function (data) {
+                const ctx = document.getElementById('statusChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Yapılacaklar', 'Devam Edenler', 'Tamamlananlar'],
+                        datasets: [{
+                            data: [data.todo, data.inProgress, data.done],
+                            backgroundColor: ['#64748b', '#f59e0b', '#10b981'],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true,
+                                    font: { family: "'Inter', sans-serif", size: 12 }
+                                }
+                            }
+                        },
+                        cutout: '70%'
+                    }
+                });
+            });
+
+            // Populate User Select
+            $.get('/Admin/GetUsers', function (users) {
+                const select = $('#assignUserId');
+                users.forEach(user => {
+                    select.append(`<option value="${user.id}">${user.fullName} (${user.email})</option>`);
+                });
+            });
+
+            // Handle Assign Button
+            $('#btnAssign').click(function () {
+                const data = {
+                    userId: $('#assignUserId').val(),
+                    title: $('#assignTitle').val(),
+                    description: $('#assignDesc').val()
+                };
+
+                if (!data.title) {
+                    Swal.fire('Hata', 'Lütfen bir başlık girin', 'error');
+                    return;
+                }
+
+                $.post('/Admin/AssignTask', data, function (res) {
+                    if (res.success) {
+                        $('#assignTaskModal').modal('hide');
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Görev başarıyla atandı'
+                        });
+                        // Refresh stats
+                        location.reload();
+                    }
+                });
+            });
+        });
+    </script>
+}

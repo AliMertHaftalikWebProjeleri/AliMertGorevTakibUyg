@@ -1,0 +1,87 @@
+@model IEnumerable<AliMertGorevTakip.Models.ViewModels.AdminUserViewModel>
+
+@{
+    ViewData["Title"] = "Kullanıcı Listesi";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">Kullanıcı İstatistikleri</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-2"></i>Geri Dön
+    </a>
+</div>
+
+<div class="card border-0 p-4 shadow-sm">
+    <table id="usersTable" class="table table-hover align-middle" style="width:100%">
+        <thead>
+            <tr>
+                <th>Ad Soyad</th>
+                <th>Email</th>
+                <th>Toplam Görev</th>
+                <th>Tamamlanan</th>
+                <th>Tamamlama %</th>
+                <th>Durum</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td class="fw-bold">@user.FullName</td>
+                    <td class="text-muted">@user.Email</td>
+                    <td><span class="badge bg-light text-dark">@user.TotalTasks</span></td>
+                    <td><span class="badge bg-success-subtle text-success">@user.CompletedTasks</span></td>
+                    <td>
+                        <div class="progress" style="height: 6px; width: 100px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: @user.CompletionPercentage%;"></div>
+                        </div>
+                        <small class="text-muted mt-1 d-inline-block">%@user.CompletionPercentage</small>
+                    </td>
+                    <td>
+                        @if (user.CompletionPercentage >= 80) {
+                            <span class="badge bg-success">Yüksek Performans</span>
+                        } else if (user.CompletionPercentage >= 40) {
+                            <span class="badge bg-warning text-dark">Normal</span>
+                        } else {
+                            <span class="badge bg-danger">Düşük</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#usersTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/tr.json'
+                },
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: '<i class="fa-solid fa-file-excel me-2"></i>Excel İndir',
+                        className: 'btn btn-success btn-sm',
+                        titleAttr: 'Excel Olarak Kaydet'
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        text: '<i class="fa-solid fa-file-pdf me-2"></i>PDF İndir',
+                        className: 'btn btn-danger btn-sm',
+                        titleAttr: 'PDF Olarak Kaydet'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fa-solid fa-print me-2"></i>Yazdır',
+                        className: 'btn btn-info btn-sm text-white',
+                        titleAttr: 'Yazdır'
+                    }
+                ],
+                responsive: true
+            });
+        });
+    </script>
+}

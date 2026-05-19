@@ -1,0 +1,174 @@
+@model IEnumerable<AliMertGorevTakip.Models.TaskItem>
+
+@{
+    ViewData["Title"] = "Görev Paneli";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">Görev Paneli</h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+        <i class="fa-solid fa-plus me-2"></i>Yeni Görev
+    </button>
+</div>
+
+<div class="kanban-container">
+    <!-- To Do -->
+    <div class="kanban-column" id="ToDo">
+        <h4 class="text-secondary"><i class="fa-solid fa-list-ul me-2"></i>Yapılacaklar</h4>
+        <div class="kanban-cards-container" data-status="ToDo">
+            @foreach (var task in Model.Where(t => t.Status == AliMertGorevTakip.Models.TaskStatus.ToDo))
+            {
+                <div class="kanban-card" data-id="@task.Id">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 class="fw-bold mb-1">@task.Title</h6>
+                        <button class="btn btn-sm text-danger delete-task" data-id="@task.Id"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <p class="text-muted small mb-0">@task.Description</p>
+                    <div class="mt-2 text-end">
+                        <span class="badge bg-light text-dark small" style="font-size: 0.65rem;">@task.CreatedAt.ToString("dd MMM")</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- In Progress -->
+    <div class="kanban-column" id="InProgress">
+        <h4 class="text-warning"><i class="fa-solid fa-spinner me-2"></i>Devam Edenler</h4>
+        <div class="kanban-cards-container" data-status="InProgress">
+            @foreach (var task in Model.Where(t => t.Status == AliMertGorevTakip.Models.TaskStatus.InProgress))
+            {
+                <div class="kanban-card" data-id="@task.Id">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 class="fw-bold mb-1">@task.Title</h6>
+                        <button class="btn btn-sm text-danger delete-task" data-id="@task.Id"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <p class="text-muted small mb-0">@task.Description</p>
+                    <div class="mt-2 text-end">
+                        <span class="badge bg-light text-dark small" style="font-size: 0.65rem;">@task.CreatedAt.ToString("dd MMM")</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Done -->
+    <div class="kanban-column" id="Done">
+        <h4 class="text-success"><i class="fa-solid fa-circle-check me-2"></i>Tamamlananlar</h4>
+        <div class="kanban-cards-container" data-status="Done">
+            @foreach (var task in Model.Where(t => t.Status == AliMertGorevTakip.Models.TaskStatus.Done))
+            {
+                <div class="kanban-card border-success" data-id="@task.Id">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 class="fw-bold mb-1 text-success">@task.Title</h6>
+                        <button class="btn btn-sm text-danger delete-task" data-id="@task.Id"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <p class="text-muted small mb-0">@task.Description</p>
+                    <div class="mt-2 text-end">
+                        <span class="badge bg-success-subtle text-success small" style="font-size: 0.65rem;">Tamamlandı</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Add Task Modal -->
+<div class="modal fade" id="addTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Yeni Görev Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Başlık</label>
+                    <input type="text" id="taskTitle" class="form-control" placeholder="Görev başlığı...">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Açıklama</label>
+                    <textarea id="taskDesc" class="form-control" rows="3" placeholder="Görev detayı..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">İptal</button>
+                <button type="button" id="saveTask" class="btn btn-primary">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize Sortable for each column
+            $('.kanban-cards-container').each(function () {
+                new Sortable(this, {
+                    group: 'kanban',
+                    animation: 150,
+                    ghostClass: 'bg-light',
+                    onEnd: function (evt) {
+                        const taskId = evt.item.getAttribute('data-id');
+                        const newStatus = evt.to.getAttribute('data-status');
+                        
+                        updateTaskStatus(taskId, newStatus);
+                    }
+                });
+            });
+
+            // Update Status Function
+            function updateTaskStatus(taskId, status) {
+                $.post('/Tasks/UpdateStatus', { taskId: taskId, status: status }, function (res) {
+                    if (res.success) {
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Görev durumu güncellendi'
+                        });
+                    }
+                });
+            }
+
+            // Save Task Logic
+            $('#saveTask').click(function () {
+                const title = $('#taskTitle').val();
+                const desc = $('#taskDesc').val();
+
+                if (!title) {
+                    Swal.fire('Hata', 'Lütfen bir başlık girin', 'error');
+                    return;
+                }
+
+                $.post('/Tasks/Create', { title: title, description: desc }, function (res) {
+                    if (res.success) {
+                        location.reload();
+                    }
+                });
+            });
+
+            // Delete Task Logic
+            $('.delete-task').click(function () {
+                const id = $(this).data('id');
+                
+                Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: "Bu görevi silmek istediğinize emin misiniz?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Evet, sil!',
+                    cancelButtonText: 'İptal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post('/Tasks/Delete', { id: id }, function (res) {
+                            if (res.success) {
+                                location.reload();
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

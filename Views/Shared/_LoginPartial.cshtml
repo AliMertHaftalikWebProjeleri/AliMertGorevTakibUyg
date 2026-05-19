@@ -1,0 +1,35 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav">
+@if (SignInManager.IsSignedIn(User))
+{
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                @(UserManager.GetUserAsync(User).Result?.FullName?[0].ToString().ToUpper() ?? "U")
+            </div>
+            <span>@UserManager.GetUserName(User)</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+            <li>
+                <form class="form-inline" asp-controller="Account" asp-action="Logout" method="post">
+                    <button type="submit" class="dropdown-item text-danger">
+                        <i class="fa-solid fa-right-from-bracket me-2"></i>Çıkış Yap
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="nav-link" asp-controller="Account" asp-action="Register">Kayıt Ol</a>
+    </li>
+    <li class="nav-item">
+        <a class="btn btn-primary ms-lg-2" asp-controller="Account" asp-action="Login">Giriş Yap</a>
+    </li>
+}
+</ul>

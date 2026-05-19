@@ -1,0 +1,36 @@
+@{
+    ViewData["Title"] = "Hoş Geldiniz";
+}
+
+<div class="row align-items-center" style="min-height: 80vh;">
+    <div class="col-lg-6">
+        <h1 class="display-3 fw-800 mb-3" style="letter-spacing: -2px;">Görevlerinizi <span class="text-primary">Premium</span> Deneyimle Yönetin</h1>
+        <p class="lead text-muted mb-5">Modern, hızlı ve güvenilir görev takip sistemi. Sürükle-bırak paneli, detaylı istatistikler ve gece modu desteği ile verimliliğinizi artırın.</p>
+        
+        <div class="d-flex gap-3">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-controller="Tasks" asp-action="Index" class="btn btn-primary btn-lg px-5 py-3 shadow">Panele Git</a>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg px-5 py-3 shadow">Hemen Başla</a>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary btn-lg px-5 py-3">Giriş Yap</a>
+            }
+        </div>
+        
+        <div class="mt-5 d-flex align-items-center gap-4 text-muted small">
+            <div><i class="fa-solid fa-check text-success me-2"></i>Sürükle Bırak</div>
+            <div><i class="fa-solid fa-check text-success me-2"></i>Koyu Tema</div>
+            <div><i class="fa-solid fa-check text-success me-2"></i>Admin Paneli</div>
+        </div>
+    </div>
+    <div class="col-lg-6 d-none d-lg-block">
+        <div class="position-relative">
+            <div class="bg-primary opacity-10 position-absolute top-0 start-0 w-100 h-100 rounded-5" style="transform: rotate(3deg);"></div>
+            <div class="card border-0 shadow-lg p-2 rounded-5 overflow-hidden">
+                <img src="https://images.pexels.com/photos/733856/pexels-photo-733856.jpeg?auto=compress&cs=tinysrgb&w=1000" class="img-fluid rounded-4" alt="Hero Image" onerror="this.src='https://dummyimage.com/800x600/6366f1/ffffff.png&text=Görev+Takip+Premium';">
+            </div>
+        </div>
+    </div>
+</div>
